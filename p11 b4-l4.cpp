@@ -7,6 +7,9 @@ const char DIVIDE_OP = '/';
 const char ADD_OP = '*';
 const char PLUS_OP = '+';
 const char MINUS_OP = '-';
+const char GREATER_OP = '>';
+const char LOWER_OP = '<';
+const char POW_OP = '^';
 int PRECISE_GLOBAL = 8;
 bool RESULT_WITH_SPACEBARS = false;
 bool DEBUG = false;
@@ -227,61 +230,133 @@ string addOperation(string firstNum, string secondNum, bool debug=false) {
     return sum;
 }
 
-string divideOperation(string firstNum, string secondNum, int preciseCount, bool debug=false) {
-    string output;
 
-    int counter = 0;
-    while (firstNum != "0" && preciseCount > 0) {
-        if (output.find(',') != string::npos) {
-            preciseCount -= 1;
+
+string raiseSubNumberFromOriginalSource(int* start, string originalNumber, string subNumber) {
+    string sub = originalNumber.substr(*start, 1);
+    subNumber += sub;
+    *start += 1;
+    
+
+    return subNumber;
+}
+
+string getNod(string subNumber, string secondNumber) {
+    bool isCycleEnded = false;
+    int counter = 1;
+    while (!isCycleEnded) {
+        counter += 1;
+        string mostNearestNumber = addOperation(secondNumber, to_string(counter));
+        if (biggerThen(mostNearestNumber, subNumber)) {
+            counter -= 1;
+            isCycleEnded = true;
+            return to_string(counter);
+        }
+    }
+}
+
+string raiseLowerValue(string firstNum, string secondNum, int* preciseCount, string* output) {
+    bool firstAdd = true;
+    while (!biggerThen(firstNum, secondNum) && firstNum != secondNum) {
+        if (firstAdd) {
+            if (output->find(',') == string::npos) {
+                if (output->empty()) {
+                    *output = "0";
+                }
+                *output += ",";
+            }
+            firstNum += '0';
+            firstAdd = false;
+        } else {
+            firstNum += '0';
+            *output += "0";
+        }
+
+        *preciseCount -= 1;
+
+        if (DEBUG) {
+            cout << "Первое число меньше второго, оно было увеличено в 10 раз. Результат: " + *output + ". Первое число: " + firstNum + "\n";
+        }
+    }
+
+    return firstNum;
+}
+
+string divideOperation(string firstNumber, string secondNumber) {
+    string output = "";
+
+    int firstLen = firstNumber.length();
+    int secondLen = secondNumber.length();
+
+    // условия конца
+    bool cycleEnded = false;
+    int precision = PRECISE_GLOBAL;
+
+    int start = 0;
+    int end = 0;
+    string lastPart = "0";
+
+    firstNumber = raiseLowerValue(firstNumber, secondNumber, &precision, &output);
+
+    while (!cycleEnded && precision > 0) {
+        string subNumber;
+        
+        // получение подчисла
+        if (start == 0 || lastPart == "0") {
+            end = start + secondLen;
+            subNumber = firstNumber.substr(start, secondLen);
+            start += secondLen;
+        } else if (lastPart == "0") {
+            int end = start + secondLen;
+            subNumber = firstNumber.substr(start, end);
+            start = end;
+        }
+        else {
+            subNumber = lastPart;
         }
 
         bool firstAdd = true;
-        while(!biggerThen(firstNum, secondNum) && firstNum != secondNum) {
-            if (firstAdd) {
-                if (output.find(',') == string::npos) {
-                    output = "0,";
-                    preciseCount -= 1;
+        while (!biggerThen(subNumber, secondNumber)) {
+            if (start >= firstLen) {
+                subNumber = raiseLowerValue(subNumber, secondNumber, &precision, &output);
+            } else {
+                subNumber = raiseSubNumberFromOriginalSource(&start, firstNumber, subNumber);
+                
+                if (lastPart != "0" && !firstAdd) {
+                    output += "0";
                 }
-                firstNum += '0';
                 firstAdd = false;
             }
-            else {
-                firstNum += '0';
-                output += "0";
-            }
-            if (debug) {
-                cout << "Первое число меньше второго, оно было увеличено в 10 раз. Результат: " + output + ". Первое число: " + firstNum + "\n";
-            }
+            
         }
-        bool isCycleEnded = false;
-        while (!isCycleEnded) {
-            counter += 1;
-            string mostNearestNumber = addOperation(secondNum, to_string(counter));
-            if (biggerThen(mostNearestNumber, firstNum)) {
-                output += to_string(counter - 1);
-                string previousMostNearestNumber = addOperation(secondNum, to_string(counter - 1));
-                firstNum = minusOperation(firstNum, previousMostNearestNumber);
-                counter = 0;
-                isCycleEnded = true;
-                if (debug) {
-                    cout << "Результат: " + output + ". НОД: " + previousMostNearestNumber + ". Знаков после запятой осталось: "
-                        + to_string(preciseCount) + ". Первое число: " + firstNum + "\n";
-                }
-            }
+        
+        string nod = getNod(subNumber, secondNumber);
+        string fullPart = addOperation(secondNumber, nod);
+        lastPart = minusOperation(subNumber, fullPart);
+
+        
+        cycleEnded = start >= firstLen && lastPart == "0";
+        
+
+        output += nod;
+        if (DEBUG) {
+            cout << "Наибольший общий делитель: " + nod + "; Получаемый результат: " + output + "; Подчисло: " + subNumber +
+                "; Остаток от вычитания подчисла и второго числа: " + lastPart + "\n";
         }
     }
 
     return output;
+    
 }
 
 char chooseOperation() {
     char operation;
     bool isAllRight = false;
-    cout << "Выберите операцию: | + | / | - | * |\n";
+    cout << "Выберите операцию: | + | / | - | * | > | < | ^ |\n";
     while(!isAllRight) {
         cin >> operation;
-        if ((operation != DIVIDE_OP) && (operation != PLUS_OP) && (operation != MINUS_OP) && (operation != ADD_OP)) {
+        if ((operation != DIVIDE_OP) && (operation != PLUS_OP) && (operation != MINUS_OP) && (operation != ADD_OP) &&
+            (operation != GREATER_OP) && (operation != LOWER_OP) && (operation != POW_OP)) {
             cout << "Неправильная операция! Попробуйте снова\n";
         } else {
             isAllRight = true;
@@ -373,7 +448,7 @@ string makeOperation(string first, string second, char operand) {
     
     switch (operand) {
         case DIVIDE_OP:
-            result = divideOperation(first, second, PRECISE_GLOBAL, DEBUG);
+            result = divideOperation(first, second);
             break;
         case PLUS_OP:
             result = plusOperation(first, second);
@@ -384,6 +459,17 @@ string makeOperation(string first, string second, char operand) {
         case ADD_OP:
             result = addOperation(first, second, DEBUG);
             break;
+        case GREATER_OP:
+            result = to_string(biggerThen(first, second));
+            break;
+        case LOWER_OP:
+            result = to_string(biggerThen(second, first));
+            break;
+        case POW_OP:
+            result = first;
+            for (int ind = 0; ind < stoi(second); ind++) {
+                result = addOperation(result, first);
+            }
     }
 
     return result;
