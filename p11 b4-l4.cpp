@@ -1,9 +1,11 @@
 ﻿using namespace std;
-
+// todo добавить таймер, за сколько секунд выполнилась операция
 #include <iostream>
 #include <string>
 
-const char DIVIDE_OP = '/';
+#define stringToInteger stoi
+
+const char DIVIDE_OP = ':';
 const char ADD_OP = '*';
 const char PLUS_OP = '+';
 const char MINUS_OP = '-';
@@ -14,7 +16,7 @@ int PRECISE_GLOBAL = 8;
 bool RESULT_WITH_SPACEBARS = false;
 bool DEBUG = false;
 
-int ctoi(char letter) {
+int characterToInteger(char letter) {
     return letter - '0';
 }
 
@@ -23,8 +25,7 @@ int maxFrom(string first, string second) {
 
     if (first.length() > second.length()) {
         maxLength = first.length();
-    }
-    else {
+    } else {
         maxLength = second.length();
     }
 
@@ -43,33 +44,32 @@ string plusOperation(string firstNum, string secondNum) {
     
     maxLength = maxFrom(firstNum, secondNum);
 
-    for (int ind = 0; ind < maxLength; ++ind) {
+    for (int letterIndex = 0; letterIndex < maxLength; ++letterIndex) {
         int firstDigit;
-        if (ind >= firstNum.length()) {
+        if (letterIndex >= firstNum.length()) {
             firstDigit = 0;
         } else {
-            firstDigit = ctoi(firstNum[ind]);
+            firstDigit = characterToInteger(firstNum[letterIndex]);
         }
 
         int secondDigit; 
-        if (ind >= secondNum.length()) {
+        if (letterIndex >= secondNum.length()) {
             secondDigit = 0;
-        }
-        else {
-            secondDigit = ctoi(secondNum[ind]);
+        } else {
+            secondDigit = characterToInteger(secondNum[letterIndex]);
         }
 
         int sum = firstDigit + secondDigit;
 
-        if (output.length() - 1 == ind) {
-            int bonus = ctoi(output[0]);
+        if (output.length() - 1 == letterIndex) {
+            int bonus = characterToInteger(output[0]);
             sum += bonus;
         }
 
         int nextSector = sum / 10;
         int thisSector = sum % 10;
 
-        if (output.length() - 1 == ind ) {
+        if (output.length() - 1 == letterIndex ) {
             output[0] = to_string(thisSector)[0];
         } else {
             output = to_string(thisSector) + output;
@@ -82,10 +82,10 @@ string plusOperation(string firstNum, string secondNum) {
     return output;
 }
 
-void minusOneFromNextSector(string *originalNum, int ind) {
-    int newInd = ind + 1;
+void minusOneFromNextSector(string *originalNum, int letterIndex) {
+    int newInd = letterIndex + 1;
     string copyNum = *originalNum;
-    int newDigit = ctoi(copyNum[newInd]);
+    int newDigit = characterToInteger(copyNum[newInd]);
     int difference = newDigit - 1;
 
     if (difference < 0) {
@@ -105,14 +105,12 @@ bool biggerThen(string first, string second) {
 
     if (first.length() > second.length()) {
         return true;
-    }
-    else if (first.length() < second.length()) {
+    } else if (first.length() < second.length()) {
         return false;
-    }
-    else {
-        for (int ind = 0; ind < first.length(); ++ind) {
-            int firstDigit = ctoi(first[ind]);
-            int secondDigit = ctoi(second[ind]);
+    } else {
+        for (int letterIndex = 0; letterIndex < first.length(); ++letterIndex) {
+            int firstDigit = characterToInteger(first[letterIndex]);
+            int secondDigit = characterToInteger(second[letterIndex]);
 
             if (firstDigit > secondDigit) {
                 return true;
@@ -125,21 +123,21 @@ bool biggerThen(string first, string second) {
 
 void deleteFirstZeros(string *output) {
     string copy = *output;
-    int ind;
+    int letterIndex;
 
     if (output->length() == 1 && copy[0] == '0') {
         return;
     }
 
-    for (ind = 0; ind < copy.length(); ++ind) {
-        if (copy[ind] == '0') {
+    for (letterIndex = 0; letterIndex < copy.length(); ++letterIndex) {
+        if (copy[letterIndex] == '0') {
             continue;
         } else {
             break;
         }
     }
 
-    *output = copy.substr(ind);
+    *output = copy.substr(letterIndex);
 }
 
 void swapTwoValues(string *first, string *second) {
@@ -159,22 +157,22 @@ string minusOperation(string firstNum, string secondNum) {
     
     reverseTwoNumber(&firstNum, &secondNum);
 
-    for (int ind = 0; ind < firstNum.length(); ++ind) {
+    for (int letterIndex = 0; letterIndex < firstNum.length(); ++letterIndex) {
         int firstDigit;
         int secondDigit;
         
         // получение второй цифры
-        if (ind >= secondNum.length()) {
+        if (letterIndex >= secondNum.length()) {
             secondDigit = 0;
         } else {
-            secondDigit = ctoi(secondNum[ind]);
+            secondDigit = characterToInteger(secondNum[letterIndex]);
         }
 
         // получение первой цифры
-        if (ind < output.length()) {
-            firstDigit = ctoi(output[ind]);
+        if (letterIndex < output.length()) {
+            firstDigit = characterToInteger(output[letterIndex]);
         } else {
-            firstDigit = ctoi(firstNum[ind]);
+            firstDigit = characterToInteger(firstNum[letterIndex]);
         }
 
         int diff = firstDigit - secondDigit;
@@ -182,7 +180,7 @@ string minusOperation(string firstNum, string secondNum) {
         if (diff < 0) {
             // взятие единицы из следующего разряда, рекурсия
             diff = 10 + diff;
-            minusOneFromNextSector(&firstNum, ind);
+            minusOneFromNextSector(&firstNum, letterIndex);
         }
         // добавление результата к строке
         output = to_string(diff) + output;
@@ -199,7 +197,7 @@ string minusOperation(string firstNum, string secondNum) {
 
 string getZeros(int number) {
     string output = "";
-    for (int ind = 0; ind < number; ++ind) {
+    for (int letterIndex = 0; letterIndex < number; ++letterIndex) {
         output += "0";
     }
 
@@ -214,8 +212,8 @@ string addOperation(string firstNum, string secondNum, bool debug=false) {
     
     for (int firstInd = 0; firstInd < firstNum.length(); ++firstInd) {
         for (int secondInd = 0; secondInd < secondNum.length(); ++secondInd) {
-            int firstDigit = ctoi(firstNum[firstInd]);
-            int secondDigit = ctoi(secondNum[secondInd]);
+            int firstDigit = characterToInteger(firstNum[firstInd]);
+            int secondDigit = characterToInteger(secondNum[secondInd]);
             
             string result = to_string(firstDigit * secondDigit) + getZeros(firstInd) + getZeros(secondInd);
 
@@ -234,18 +232,23 @@ string addOperation(string firstNum, string secondNum, bool debug=false) {
 
 string raiseSubNumberFromOriginalSource(int* start, string originalNumber, string subNumber) {
     string sub = originalNumber.substr(*start, 1);
+    
     subNumber += sub;
-    *start += 1;
+    ++*start;
     
 
     return subNumber;
 }
 
 string getNod(string subNumber, string secondNumber) {
+    if (subNumber == "0") {
+        return "0";
+    }
+
     bool isCycleEnded = false;
     int counter = 1;
     while (!isCycleEnded) {
-        counter += 1;
+        ++counter;
         string mostNearestNumber = addOperation(secondNumber, to_string(counter));
         if (biggerThen(mostNearestNumber, subNumber)) {
             counter -= 1;
@@ -272,7 +275,7 @@ string raiseLowerValue(string firstNum, string secondNum, int* preciseCount, str
             *output += "0";
         }
 
-        *preciseCount -= 1;
+        --*preciseCount;
 
         if (DEBUG) {
             cout << "Первое число меньше второго, оно было увеличено в 10 раз. Результат: " + *output + ". Первое число: " + firstNum + "\n";
@@ -283,6 +286,8 @@ string raiseLowerValue(string firstNum, string secondNum, int* preciseCount, str
 }
 
 string divideOperation(string firstNumber, string secondNumber) {
+    // todo деление игнорирует нули, когда те должны оставаться в оутпуте
+
     string output = "";
 
     int firstLen = firstNumber.length();
@@ -310,13 +315,12 @@ string divideOperation(string firstNumber, string secondNumber) {
             int end = start + secondLen;
             subNumber = firstNumber.substr(start, end);
             start = end;
-        }
-        else {
+        } else {
             subNumber = lastPart;
         }
 
         bool firstAdd = true;
-        while (!biggerThen(subNumber, secondNumber)) {
+        while (!biggerThen(subNumber, secondNumber) && subNumber != secondNumber && subNumber != "0") {
             if (start >= firstLen) {
                 subNumber = raiseLowerValue(subNumber, secondNumber, &precision, &output);
             } else {
@@ -352,7 +356,8 @@ string divideOperation(string firstNumber, string secondNumber) {
 char chooseOperation() {
     char operation;
     bool isAllRight = false;
-    cout << "Выберите операцию: | + | / | - | * | > | < | ^ |\n";
+    cout << "Выберите операцию: | " << PLUS_OP << " | " << DIVIDE_OP << " | " << MINUS_OP << " | " 
+            << ADD_OP << " | " << GREATER_OP << " | " << LOWER_OP << " | " << POW_OP << '\n';
     while(!isAllRight) {
         cin >> operation;
         if ((operation != DIVIDE_OP) && (operation != PLUS_OP) && (operation != MINUS_OP) && (operation != ADD_OP) &&
@@ -426,10 +431,10 @@ string inputValue(string header) {
     string inputLine;
     while (inputLine.empty()) {
         getline(cin, inputLine);
-        for (int ind = 0; ind < inputLine.length(); ++ind) {
-            char letter = inputLine[ind];
+        for (int letterIndex = 0; letterIndex < inputLine.length(); ++letterIndex) {
+            char letter = inputLine[letterIndex];
 
-            if (ind == 0 && letter == '-') {
+            if (letterIndex == 0 && letter == '-') {
                 continue;
             }
 
@@ -467,7 +472,7 @@ string makeOperation(string first, string second, char operand) {
             break;
         case POW_OP:
             result = first;
-            for (int ind = 0; ind < stoi(second); ind++) {
+            for (int letterIndex = 0; letterIndex < stringToInteger(second); letterIndex++) {
                 result = addOperation(result, first);
             }
     }
@@ -487,19 +492,17 @@ void greetingsSettings() {
         option = inputValue("опцию для настройки");
         if(option == "1") {
             system("cls");
-            PRECISE_GLOBAL = stoi(inputValue("кол-во знаков после запятой"));
+            PRECISE_GLOBAL = stringToInteger(inputValue("кол-во знаков после запятой"));
         } else if (option == "2") {
             system("cls");
-            RESULT_WITH_SPACEBARS = stoi(inputValue("вывод результата с пробелами (0 или 1)"));
+            RESULT_WITH_SPACEBARS = stringToInteger(inputValue("вывод результата с пробелами (0 или 1)"));
         } else if (option == "3") {
             system("cls");
-            DEBUG = stoi(inputValue("режим отладчика (0 или 1)"));
+            DEBUG = stringToInteger(inputValue("режим отладчика (0 или 1)"));
         } else if (option == "0") {
             system("cls");
             return;
-        } else {
-
-        }
+        }        
     }   
 }
 
@@ -507,11 +510,11 @@ string pasteSpacebars(string number) {
     reverse(number.begin(), number.end());
     string output;
 
-    for (int ind = 0; ind < number.length(); ++ind) {
-        if (ind % 3 == 0) {
+    for (int letterIndex = 0; letterIndex < number.length(); ++letterIndex) {
+        if (letterIndex % 3 == 0) {
             output += " ";
         }
-        output += number[ind];
+        output += number[letterIndex];
     }
     reverse(output.begin(), output.end());
     return output;
