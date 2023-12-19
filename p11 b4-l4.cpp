@@ -1,5 +1,5 @@
 ﻿using namespace std;
-// todo добавить таймер, за сколько секунд выполнилась операция
+#include <time.h>
 #include <iostream>
 #include <string>
 
@@ -129,7 +129,7 @@ void deleteFirstZeros(string *output) {
         return;
     }
 
-    for (letterIndex = 0; letterIndex < copy.length(); ++letterIndex) {
+    for (letterIndex = 0; letterIndex < copy.length() - 1; ++letterIndex) {
         if (copy[letterIndex] == '0') {
             continue;
         } else {
@@ -147,13 +147,7 @@ void swapTwoValues(string *first, string *second) {
 }
 
 string minusOperation(string firstNum, string secondNum) {
-    bool minus = false;
     string output;
-    
-    if (!biggerThen(firstNum, secondNum) && firstNum != secondNum) {
-        swapTwoValues(&firstNum, &secondNum);
-        minus = true;
-    }
     
     reverseTwoNumber(&firstNum, &secondNum);
 
@@ -187,10 +181,6 @@ string minusOperation(string firstNum, string secondNum) {
     }
 
     deleteFirstZeros(&output);
-
-    if (minus) {
-        output = '-' + output;
-    }
 
     return output;
 }
@@ -545,6 +535,8 @@ int main() {
             case 2:
                 secondNumber = inputValue("второе число");
   
+                clock_t start = clock();
+
                 isMinusInResult = handleWithMinus(&firstNumber, &secondNumber, &operand);
                 string result = makeOperation(firstNumber, secondNumber, operand);
                 if (RESULT_WITH_SPACEBARS && result.find(',') == string::npos) {
@@ -553,7 +545,12 @@ int main() {
                 if (isMinusInResult) {
                     result = '-' + result;
                 }
-                cout << "Результат: " << result << "\n\n";
+
+                clock_t end = clock();
+
+                cout << "Результат: " << result << "\n";
+                double seconds = difftime(end, start);
+                cout << "Время выполнения: " << seconds << " мс\n";
         }
         
         ++condition;
